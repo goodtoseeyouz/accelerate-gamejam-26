@@ -10,8 +10,13 @@ public:
   std::string titleText3 = "made by bradley yang";
 
   std::string playButtonText = "PLAY?";
+  std::string quitButtonText = "QUIT?";
+  std::vector<ScreenArea *> bases;
+
+  bool keepLooping = true;
 
   void addMeowToTitleText3() { titleText3 = titleText3 + "meow"; }
+  void stopKeepLooping() { keepLooping = false; }
 };
 
 int main() {
@@ -25,23 +30,27 @@ int main() {
     ScreenArea(std::string name, Rectangle relativeArea,
                Color color = {0, 0, 0, 0});*/
   GameManager gm;
+
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // MENU TEXT
-  ScreenArea base1{"main menu", Rectangle{0, 0, 1, 1}, DARKBLUE};
-  base1.addChild(std::make_unique<DynamicStringScreenArea>(
+
+  ScreenArea menu{"main menu", Rectangle{0, 0, 1, 1}, DARKBLUE};
+  gm.bases.push_back(&menu);
+
+  menu.addChild(std::make_unique<DynamicStringScreenArea>(
       "main text", Rectangle{0.40f, 0.2f, 1, 0.2f}, &gm.titleText, BLUE));
 
-  base1.addChild(std::make_unique<DynamicStringScreenArea>(
+  menu.addChild(std::make_unique<DynamicStringScreenArea>(
       "main text lower", Rectangle{0.40f, 0.4f, 1, 0.2f}, &gm.titleText2,
       BLUE));
 
-  base1.addChild(std::make_unique<DynamicStringScreenArea>(
+  menu.addChild(std::make_unique<DynamicStringScreenArea>(
       "main text even lower", Rectangle{0.40f, 0.6f, 1, 0.05f}, &gm.titleText3,
       BLUE));
 
-  base1.addChild(std::make_unique<PixelGridScreenArea>(
+  menu.addChild(std::make_unique<PixelGridScreenArea>(
       "note image", Rectangle{0.8, 0.2, 0.1, 0.2}));
-  dynamic_cast<PixelGridScreenArea &>(base1.getChild("note image"))
+  dynamic_cast<PixelGridScreenArea &>(menu.getChild("note image"))
       .setGrid(
           {{NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR,
             NO_COLOR, NO_COLOR},
@@ -58,21 +67,22 @@ int main() {
            {NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR,
             NO_COLOR, NO_COLOR}});
 
+  // MENU TEXT
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // BUTTONS
-  base1
-      .addChild(std::make_unique<PixelGridScreenArea>(
-          "play button", Rectangle{0.1, 0.2, 0.2, 0.1}))
+
+  menu.addChild(std::make_unique<PixelGridScreenArea>(
+                    "play button", Rectangle{0.1, 0.3, 0.2, 0.1}))
       .addChild(std::make_unique<TriggerOnClickScreenArea>(
           "play button trigger", Rectangle{0, 0, 1, 1}))
       .addChild(std::make_unique<ClassFunctionScreenArea>(
           "play button function", &gm, &GameManager::addMeowToTitleText3));
 
-  base1.getChild("play button")
+  menu.getChild("play button")
       .addChild(std::make_unique<DynamicStringScreenArea>(
           "play button text", Rectangle{0.18, 0.2, 1, 0.7}, &gm.playButtonText,
           BLUE));
-  dynamic_cast<PixelGridScreenArea &>(base1.getChild("play button"))
+  dynamic_cast<PixelGridScreenArea &>(menu.getChild("play button"))
       .setGrid({{BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE},
                 {BLUE, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR,
                  NO_COLOR, NO_COLOR, NO_COLOR, BLUE},
@@ -81,9 +91,65 @@ int main() {
                 {BLUE, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR,
                  NO_COLOR, NO_COLOR, NO_COLOR, BLUE},
                 {BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE}});
+
+  menu.addChild(std::make_unique<PixelGridScreenArea>(
+                    "exit button", Rectangle{0.1, 0.45, 0.2, 0.1}))
+      .addChild(std::make_unique<TriggerOnClickScreenArea>(
+          "exit button trigger", Rectangle{0, 0, 1, 1}))
+      .addChild(std::make_unique<ClassFunctionScreenArea>(
+          "exit button function", &gm, &GameManager::stopKeepLooping));
+
+  menu.getChild("exit button")
+      .addChild(std::make_unique<DynamicStringScreenArea>(
+          "exit button text", Rectangle{0.18, 0.2, 1, 0.7}, &gm.quitButtonText,
+          BLUE));
+  dynamic_cast<PixelGridScreenArea &>(menu.getChild("exit button"))
+      .setGrid({{BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE},
+                {BLUE, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR,
+                 NO_COLOR, NO_COLOR, NO_COLOR, BLUE},
+                {BLUE, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR,
+                 NO_COLOR, NO_COLOR, NO_COLOR, BLUE},
+                {BLUE, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR, NO_COLOR,
+                 NO_COLOR, NO_COLOR, NO_COLOR, BLUE},
+                {BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE}});
+  // BUTTONS
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  base1.calculateTrueArea({0, 0, screenWidth, screenHeight});
+  // MENU SCREEN ENDS HERE | MENU SCREEN ENDS HERE | MENU SCREEN ENDS HERE
+  // ##############################################################################
+  // GAME SCREEN STARTS HERE | GAME SCREEN STARTS HERE | GAME SCREEN STARTS HERE
+
+  ScreenArea game{"game screen", Rectangle{0, 0, 1, 1}, DARKGREEN};
+  game.setShouldDraw(false);
+  gm.bases.push_back(&game);
+
+  // GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE
+  // ##############################################################################
+  // SETTINGS SCREEN STARTS HERE | SETTINGS SCREEN STARTS HERE
+
+  ScreenArea settings{"settings screen", Rectangle{0, 0, 1, 1},
+                      Color{255, 255, 255, 100}};
+  settings.setShouldDraw(false);
+  gm.bases.push_back(&settings);
+
+  settings
+      .addChild(std::make_unique<ScreenArea>(
+          "solid background", Rectangle{0.3, 0.2, 0.4, 0.6}, DARKBLUE))
+      .addChild(std::make_unique<ScreenArea>(
+          "exit button 2", Rectangle{0.1, 0.1, 0.8, 0.3}, BLUE))
+      .addChild(std::make_unique<TriggerOnClickScreenArea>(
+          "exit button 2 trigger", Rectangle{0, 0, 1, 1}))
+      .addChild(std::make_unique<ClassFunctionScreenArea>(
+          "exit button 2 function", &gm, &GameManager::stopKeepLooping));
+
+  settings.getChild("solid background")
+      .getChild("exit button 2")
+      .addChild(std::make_unique<DynamicStringScreenArea>(
+          "exit button 2 text", Rectangle{0.15, 0.2, 1, 0.7},
+          &gm.quitButtonText, BLACK));
+
+  // SETTINGS SCREEN ENDS HERE | SETTINGS SCREEN ENDS HERE
+  // ##############################################################################
 
   /*
   struct InputData {
@@ -93,15 +159,24 @@ int main() {
     int mouseY;
   };
   */
+  menu.calculateTrueArea({0, 0, screenWidth, screenHeight});
+  game.calculateTrueArea({0, 0, screenWidth, screenHeight});
+  settings.calculateTrueArea({0, 0, screenWidth, screenHeight});
 
-  while (!WindowShouldClose()) {
+  while (gm.keepLooping) {
     BeginDrawing();
     ClearBackground(BLACK);
-    base1.draw();
+    menu.draw();
+    game.draw();
+    settings.draw();
     EndDrawing();
-    base1.checkInput({IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
-                      IsMouseButtonPressed(MOUSE_BUTTON_LEFT), GetMouseX(),
-                      GetMouseY()});
-    std::cout << IsMouseButtonPressed(MOUSE_BUTTON_LEFT) << std::endl;
+    InputData innn{IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
+                   IsMouseButtonPressed(MOUSE_BUTTON_LEFT), GetMouseX(),
+                   GetMouseY()};
+    menu.checkInput(innn);
+    settings.checkInput(innn);
+    if (IsKeyPressed(KEY_ESCAPE)) {
+      gm.bases[2]->setShouldDraw(!gm.bases[2]->shouldDraw_);
+    }
   }
 }
