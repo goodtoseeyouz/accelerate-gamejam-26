@@ -20,6 +20,8 @@ void ScreenArea::draw() {
 }
 
 void ScreenArea::checkInput(InputData input) {
+  if (!shouldDraw_)
+    return;
   for (auto &child : children_) {
     child->checkInput(input);
   }

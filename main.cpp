@@ -1,7 +1,13 @@
 #include "raylib.h"
 #include "screenArea.h"
+#include <cmath>
 
 #define NO_COLOR {0, 0, 0, 0}
+
+void playNote(Sound &sound, int semitones) {
+  SetSoundPitch(sound, powf(2.0f, semitones / 12.0f));
+  PlaySound(sound);
+}
 
 class GameManager {
 public:
@@ -15,7 +21,10 @@ public:
 
   bool keepLooping = true;
 
-  void addMeowToTitleText3() { titleText3 = titleText3 + "meow"; }
+  void toggleMenuGame() {
+    bases[0]->setShouldDraw(!bases[0]->shouldDraw_);
+    bases[1]->setShouldDraw(!bases[1]->shouldDraw_);
+  }
   void stopKeepLooping() { keepLooping = false; }
 };
 
@@ -24,6 +33,8 @@ int main() {
   const int screenHeight = 900;
 
   InitWindow(screenWidth, screenHeight, "music mayhem");
+  InitAudioDevice();
+  Sound piano = LoadSound("piano_C_major.wav");
 
   SetTargetFPS(60);
   /*
@@ -76,7 +87,7 @@ int main() {
       .addChild(std::make_unique<TriggerOnClickScreenArea>(
           "play button trigger", Rectangle{0, 0, 1, 1}))
       .addChild(std::make_unique<ClassFunctionScreenArea>(
-          "play button function", &gm, &GameManager::addMeowToTitleText3));
+          "play button function", &gm, &GameManager::toggleMenuGame));
 
   menu.getChild("play button")
       .addChild(std::make_unique<DynamicStringScreenArea>(
@@ -123,6 +134,9 @@ int main() {
   game.setShouldDraw(false);
   gm.bases.push_back(&game);
 
+  game.addChild(std::make_unique<ScreenArea>("bottom text area",
+                                             Rectangle{0, 0.9, 1, 0.1}, GREEN));
+
   // GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE
   // ##############################################################################
   // SETTINGS SCREEN STARTS HERE | SETTINGS SCREEN STARTS HERE
@@ -134,9 +148,9 @@ int main() {
 
   settings
       .addChild(std::make_unique<ScreenArea>(
-          "solid background", Rectangle{0.3, 0.2, 0.4, 0.6}, DARKBLUE))
+          "solid background", Rectangle{0.3, 0.2, 0.4, 0.6}, ORANGE))
       .addChild(std::make_unique<ScreenArea>(
-          "exit button 2", Rectangle{0.1, 0.1, 0.8, 0.3}, BLUE))
+          "exit button 2", Rectangle{0.1, 0.1, 0.8, 0.3}, YELLOW))
       .addChild(std::make_unique<TriggerOnClickScreenArea>(
           "exit button 2 trigger", Rectangle{0, 0, 1, 1}))
       .addChild(std::make_unique<ClassFunctionScreenArea>(
@@ -177,6 +191,20 @@ int main() {
     settings.checkInput(innn);
     if (IsKeyPressed(KEY_ESCAPE)) {
       gm.bases[2]->setShouldDraw(!gm.bases[2]->shouldDraw_);
+    }
+    if (gm.bases[1]->shouldDraw_) {
+      if (IsKeyPressed(KEY_S))
+        playNote(piano, -6);
+      if (IsKeyPressed(KEY_D))
+        playNote(piano, -4);
+      if (IsKeyPressed(KEY_F))
+        playNote(piano, -2);
+      if (IsKeyPressed(KEY_J))
+        playNote(piano, 1);
+      if (IsKeyPressed(KEY_K))
+        playNote(piano, 3);
+      if (IsKeyPressed(KEY_L))
+        playNote(piano, 6);
     }
   }
 }
