@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "rhythm.cpp"
 #include "screenArea.h"
 #include <cmath>
 
@@ -155,21 +156,7 @@ int main() {
     game.addChild(std::make_unique<ScreenArea>(
         "divider " + std::to_string(i), Rectangle{0.165f * i, 0, 0.01, 0.9},
         GREEN));
-  } /*
-   game.addChild(std::make_unique<ScreenArea>(
-       "divider 1", Rectangle{0, 0, 0.01, 0.9}, GREEN));
-   game.addChild(std::make_unique<ScreenArea>(
-       "divider 2", Rectangle{0.165, 0, 0.01, 0.9}, GREEN));
-   game.addChild(std::make_unique<ScreenArea>(
-       "divider 3", Rectangle{0.165 * 2, 0, 0.01, 0.9}, GREEN));
-   game.addChild(std::make_unique<ScreenArea>(
-       "divider 4", Rectangle{0.165 * 3, 0, 0.01, 0.9}, GREEN));
-   game.addChild(std::make_unique<ScreenArea>(
-       "divider 5", Rectangle{0.165 * 4, 0, 0.01, 0.9}, GREEN));
-   game.addChild(std::make_unique<ScreenArea>(
-       "divider 6", Rectangle{0.165 * 5, 0, 0.01, 0.9}, GREEN));
-   game.addChild(std::make_unique<ScreenArea>(
-       "divider 7", Rectangle{0.165 * 6, 0, 0.01, 0.9}, GREEN));*/
+  }
 
   // LETTERS
   float keyWidth = 0.04;
@@ -198,31 +185,10 @@ int main() {
     game.addChild(std::make_unique<ScreenArea>(
         temp[i], Rectangle{0.02f + 0.165f * i, 0, 0.135, 1},
         Color{0, 0, 0, 50}));
-  } /*
-   game.addChild(std::make_unique<ScreenArea>(
-                     "colorman s", Rectangle{0.02 + 0.165 * 0, 0, 0.135, 1},
-                     Color{0, 0, 0, 50}))
-       .setShouldDraw(false);
-   game.addChild(std::make_unique<ScreenArea>(
-                     "colorman d", Rectangle{0.02 + 0.165 * 1, 0, 0.135, 1},
-                     Color{0, 0, 0, 50}))
-       .setShouldDraw(false);
-   game.addChild(std::make_unique<ScreenArea>(
-                     "colorman f", Rectangle{0.02 + 0.165 * 2, 0, 0.135, 1},
-                     Color{0, 0, 0, 50}))
-       .setShouldDraw(false);
-   game.addChild(std::make_unique<ScreenArea>(
-                     "colorman j", Rectangle{0.02 + 0.165 * 3, 0, 0.135, 1},
-                     Color{0, 0, 0, 50}))
-       .setShouldDraw(false);
-   game.addChild(std::make_unique<ScreenArea>(
-                     "colorman k", Rectangle{0.02 + 0.165 * 4, 0, 0.135, 1},
-                     Color{0, 0, 0, 50}))
-       .setShouldDraw(false);
-   game.addChild(std::make_unique<ScreenArea>(
-                     "colorman l", Rectangle{0.02 + 0.165 * 5, 0, 0.135, 1},
-                     Color{0, 0, 0, 50}))
-       .setShouldDraw(false);*/
+  }
+
+  game.addChild(std::make_unique<ScreenArea>(
+      "top area", Rectangle{0, 0, 1, 0.9}, Color(NO_COLOR)));
 
   // GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE
   // ##############################################################################
@@ -264,7 +230,11 @@ int main() {
   game.calculateTrueArea({0, 0, screenWidth, screenHeight});
   settings.calculateTrueArea({0, 0, screenWidth, screenHeight});
 
+  float currentTime = 0;
+  float multiplier = 1;
+
   while (gm.keepLooping) {
+    currentTime += GetFrameTime() * 2 * multiplier;
     BeginDrawing();
     ClearBackground(BLACK);
     menu.draw();
@@ -293,6 +263,8 @@ int main() {
       if (IsKeyPressed(KEY_L))
         playNote(piano, 6);
     }
+
+    Rhythm rhythm(100);
 
     for (int key : {KEY_S, KEY_D, KEY_F, KEY_J, KEY_K, KEY_L}) {
       gm.bases[1]
