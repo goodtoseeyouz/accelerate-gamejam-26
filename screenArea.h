@@ -50,6 +50,7 @@ public:
   ScreenArea &getChild(std::string childName);
   const std::string &getName();
   void setShouldDraw(bool state);
+  virtual bool shouldDraw() { return shouldDraw_; }
 
   // protected:
   virtual void checkInput_(InputData input);
@@ -116,4 +117,14 @@ public:
   std::vector<std::vector<Color>> grid_;
 
   void draw_() override;
+};
+
+class ToggleableScreenArea : public ScreenArea {
+public:
+  ToggleableScreenArea(std::string name, Rectangle relativeArea,
+                       bool &shouldDraww, Color color = RED)
+      : ScreenArea(name, relativeArea, color), shouldDraww(shouldDraww) {}
+  bool shouldDraw() override { return shouldDraww; }
+
+  bool &shouldDraww;
 };

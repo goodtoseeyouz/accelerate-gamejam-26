@@ -2,6 +2,8 @@
 #include "rhythm.cpp"
 #include "screenArea.h"
 #include <cmath>
+#include <deque>
+#include <memory>
 
 #define NO_COLOR {0, 0, 0, 0}
 
@@ -23,6 +25,7 @@ public:
 
   std::string playButtonText = "PLAY?";
   std::string quitButtonText = "QUIT?";
+  std::string resetButtonText = "RESET";
   std::vector<ScreenArea *> bases;
 
   std::string textS = "S";
@@ -32,13 +35,26 @@ public:
   std::string textK = "K";
   std::string textL = "L";
 
+  std::string streak = "0";
+  std::string multiplierString = "x1.00";
+  float multiplier = 0.8;
+
+  bool reset = false;
+
   bool keepLooping = true;
+  std::deque<bool> notes_pressed;
 
   void toggleMenuGame() {
     bases[0]->setShouldDraw(!bases[0]->shouldDraw_);
     bases[1]->setShouldDraw(!bases[1]->shouldDraw_);
   }
   void stopKeepLooping() { keepLooping = false; }
+  void resetGameState() {
+    streak = "0";
+    multiplierString = "x1.00";
+    multiplier = 1.0;
+    reset = true;
+  }
 };
 
 int main() {
@@ -48,6 +64,7 @@ int main() {
   InitWindow(screenWidth, screenHeight, "music mayhem");
   InitAudioDevice();
   Sound piano = LoadSound("piano_C_major.wav");
+  // Sound piano = LoadSound("lo-fi-nu-snare-1_D_major.wav");
 
   SetTargetFPS(60);
   /*
@@ -143,7 +160,7 @@ int main() {
   // ##############################################################################
   // GAME SCREEN STARTS HERE | GAME SCREEN STARTS HERE | GAME SCREEN STARTS HERE
 
-  ScreenArea game{"game screen", Rectangle{0, 0, 1, 1}, DARKGREEN};
+  ScreenArea game{"game screen", Rectangle{0.2, 0, 0.8, 1}, DARKGREEN};
   game.setShouldDraw(false);
   gm.bases.push_back(&game);
 
@@ -159,7 +176,7 @@ int main() {
   }
 
   // LETTERS
-  float keyWidth = 0.04;
+  float keyWidth = 0.05;
   bottomArea.addChild(std::make_unique<DynamicStringScreenArea>(
       "s key", Rectangle{getMidPosition(0) - keyWidth / 2, 0, keyWidth, 1},
       &gm.textS, BLACK));
@@ -187,8 +204,8 @@ int main() {
         Color{0, 0, 0, 50}));
   }
 
-  game.addChild(std::make_unique<ScreenArea>(
-      "top area", Rectangle{0, 0, 1, 0.9}, Color(NO_COLOR)));
+  game.addChild(std::make_unique<ScreenArea>("top area",
+                                             Rectangle{0, 0, 1, 0.9}, Color()));
 
   // GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE
   // ##############################################################################
@@ -215,6 +232,20 @@ int main() {
           "exit button 2 text", Rectangle{0.15, 0.2, 1, 0.7},
           &gm.quitButtonText, BLACK));
 
+  settings.getChild("solid background")
+      .addChild(std::make_unique<ScreenArea>(
+          "reset button", Rectangle{0.1, 0.45, 0.8, 0.3}, YELLOW))
+      .addChild(std::make_unique<TriggerOnClickScreenArea>(
+          "reset button trigger", Rectangle{0, 0, 1, 1}))
+      .addChild(std::make_unique<ClassFunctionScreenArea>(
+          "reset button function", &gm, &GameManager::resetGameState));
+
+  settings.getChild("solid background")
+      .getChild("reset button")
+      .addChild(std::make_unique<DynamicStringScreenArea>(
+          "reset button text", Rectangle{0.15, 0.2, 1, 0.7},
+          &gm.resetButtonText, BLACK));
+
   // SETTINGS SCREEN ENDS HERE | SETTINGS SCREEN ENDS HERE
   // ##############################################################################
 
@@ -230,46 +261,162 @@ int main() {
   game.calculateTrueArea({0, 0, screenWidth, screenHeight});
   settings.calculateTrueArea({0, 0, screenWidth, screenHeight});
 
-  float currentTime = 0;
-  float multiplier = 1;
+  game.addChild(std::make_unique<ScreenArea>(
+                    "info text area", Rectangle{-0.25, 0, 0.25, 1}, DARKGRAY))
+      .addChild(std::make_unique<DynamicStringScreenArea>(
+          "streak", Rectangle{0.1, 0.1, 1, 0.1}, &gm.streak, Color(BLACK)));
+  game.getChild("info text area")
+      .addChild(std::make_unique<DynamicStringScreenArea>(
+          "multiplier", Rectangle{0.1, 0.3, 1, 0.1}, &gm.multiplierString,
+          Color(BLACK)));
 
   while (gm.keepLooping) {
-    currentTime += GetFrameTime() * 2 * multiplier;
-    BeginDrawing();
-    ClearBackground(BLACK);
-    menu.draw();
-    game.draw();
-    settings.draw();
-    EndDrawing();
-    InputData innn{IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
-                   IsMouseButtonPressed(MOUSE_BUTTON_LEFT), GetMouseX(),
-                   GetMouseY()};
-    menu.checkInput(innn);
-    settings.checkInput(innn);
-    if (IsKeyPressed(KEY_ESCAPE)) {
-      gm.bases[2]->setShouldDraw(!gm.bases[2]->shouldDraw_);
-    }
-    if (gm.bases[1]->shouldDraw_) {
-      if (IsKeyPressed(KEY_S))
-        playNote(piano, -6);
-      if (IsKeyPressed(KEY_D))
-        playNote(piano, -4);
-      if (IsKeyPressed(KEY_F))
-        playNote(piano, -2);
-      if (IsKeyPressed(KEY_J))
-        playNote(piano, 1);
-      if (IsKeyPressed(KEY_K))
-        playNote(piano, 3);
-      if (IsKeyPressed(KEY_L))
-        playNote(piano, 6);
-    }
 
+    float currentTime = 1000000000;
+    gm.multiplier = 0.8;
     Rhythm rhythm(100);
+    std::cout << "A";
+    game.getChild("top area")
+        .addChild(std::make_unique<ScreenArea>("sliding", Rectangle{0, 0, 0, 0},
+                                               Color(BLUE)));
+    std::cout << "B";
 
-    for (int key : {KEY_S, KEY_D, KEY_F, KEY_J, KEY_K, KEY_L}) {
-      gm.bases[1]
-          ->getChild(std::string(1, static_cast<char>(key)))
-          .setShouldDraw(IsKeyDown(key));
+    const int secondsPerRhythm = 10;
+    const int wholeNotesPerSecond = 10 / secondsPerRhythm;
+
+    ScreenArea failScreen("failscreen", Rectangle{0, 0, 1, 1}, RED);
+    failScreen.calculateTrueArea({0, 0, screenWidth, screenHeight});
+
+    while (gm.keepLooping && !gm.reset) {
+      if (game.shouldDraw_ && !settings.shouldDraw_) {
+        if (currentTime >= secondsPerRhythm) {
+          gm.notes_pressed.erase(gm.notes_pressed.begin(),
+                                 gm.notes_pressed.end());
+          game.getChild("top area").children_.pop_back();
+          currentTime = -2;
+          gm.multiplier += 0.2;
+          gm.multiplierString =
+              "x" + std::to_string(gm.multiplier).substr(0, 4);
+          rhythm = Rhythm(10);
+          std::cout << "C";
+          ScreenArea &slider =
+              game.getChild("top area")
+                  .addChild(std::make_unique<ScreenArea>(
+                      "sliding", Rectangle{0, -10, 1, 10}, Color(NO_COLOR)));
+
+          std::cout << "D";
+          float place = 0;
+          for (int i = 0; i < rhythm.notes.size(); i++) {
+            gm.notes_pressed.push_back(false);
+            slider
+                .addChild(std::make_unique<ScreenArea>(
+                    "note " + std::to_string(i),
+                    Rectangle{0.02f + 0.165f * rhythm.notes[i].key,
+                              1.0f - (place + rhythm.notes[i].duration) /
+                                         rhythm.duration,
+                              0.135f,
+                              rhythm.notes[i].duration / rhythm.duration -
+                                  0.001f},
+                    BLUE))
+                .addChild(std::make_unique<ToggleableScreenArea>(
+                    "clicked " + std::to_string(i),
+                    Rectangle{
+                        0,
+                        0,
+                        1,
+                        1,
+                    },
+                    gm.notes_pressed[i], Color(DARKBLUE)));
+            std::cout << 20 - place / 10 << " ";
+            place += rhythm.notes[i].duration;
+          }
+          std::cout << "E" << std::endl;
+        }
+
+        currentTime += GetFrameTime() * gm.multiplier;
+        game.getChild("top area").getChild("sliding").relativeArea_.y +=
+            GetFrameTime() * gm.multiplier;
+        game.calculateTrueArea({0, 0, screenWidth, screenHeight});
+      }
+      // std::cout << game.getChild("top
+      // area").getChild("sliding").relativeArea_.y;
+      BeginDrawing();
+      ClearBackground(BLACK);
+      menu.draw();
+      game.draw();
+      failScreen.draw();
+      settings.draw();
+      EndDrawing();
+      InputData innn{IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
+                     IsMouseButtonPressed(MOUSE_BUTTON_LEFT), GetMouseX(),
+                     GetMouseY()};
+      menu.checkInput(innn);
+      settings.checkInput(innn);
+      if (IsKeyPressed(KEY_ESCAPE)) {
+        gm.bases[2]->setShouldDraw(!gm.bases[2]->shouldDraw_);
+      }
+
+      const int keys[] = {KEY_S, KEY_D, KEY_F, KEY_J, KEY_K, KEY_L};
+      failScreen.setShouldDraw(false);
+
+      if (game.shouldDraw_ && !settings.shouldDraw_) {
+        ScreenArea &topArea = game.getChild("top area");
+        ScreenArea &slider = topArea.getChild("sliding");
+
+        float currentHitHeight = topArea.trueArea_.y + topArea.trueArea_.height;
+
+        for (int lane = 0; lane < 6; lane++) {
+          if (!IsKeyPressed(keys[lane]))
+            continue;
+
+          bool validPress = false;
+          for (int i = 0; i < rhythm.notes.size(); i++) {
+            if (rhythm.notes[i].key != lane || gm.notes_pressed[i])
+              continue;
+
+            IntRectangle currentNote =
+                slider.getChild("note " + std::to_string(i)).trueArea_;
+
+            if (currentNote.y <= currentHitHeight &&
+                currentNote.y + currentNote.height >= currentHitHeight) {
+              validPress = true;
+              gm.notes_pressed[i] = true;
+              gm.streak = std::to_string(std::stoi(gm.streak) + 1);
+              break;
+            }
+          }
+          if (!validPress) {
+            gm.streak = "0";
+            failScreen.setShouldDraw(true);
+          }
+        }
+      }
+
+      if (gm.bases[1]->shouldDraw_) {
+        if (IsKeyPressed(KEY_S))
+          playNote(piano, -6);
+        if (IsKeyPressed(KEY_D))
+          playNote(piano, -4);
+        if (IsKeyPressed(KEY_F))
+          playNote(piano, -2);
+        if (IsKeyPressed(KEY_J))
+          playNote(piano, 1);
+        if (IsKeyPressed(KEY_K))
+          playNote(piano, 3);
+        if (IsKeyPressed(KEY_L))
+          playNote(piano, 6);
+      }
+
+      for (int key : {KEY_S, KEY_D, KEY_F, KEY_J, KEY_K, KEY_L}) {
+        gm.bases[1]
+            ->getChild(std::string(1, static_cast<char>(key)))
+            .setShouldDraw(IsKeyDown(key));
+      }
     }
+    if (gm.reset) {
+      gm.keepLooping = true;
+      game.getChild("top area").children_.pop_back();
+    }
+    gm.reset = false;
   }
 }

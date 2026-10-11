@@ -9,7 +9,7 @@ ScreenArea::ScreenArea(std::string name, Rectangle relativeArea, Color color) {
 }
 
 void ScreenArea::draw() {
-  if (!shouldDraw_)
+  if (!shouldDraw())
     return;
   BeginScissorMode(trueArea_.x, trueArea_.y, trueArea_.width, trueArea_.height);
   draw_();
