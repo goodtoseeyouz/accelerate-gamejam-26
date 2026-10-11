@@ -9,6 +9,11 @@ void playNote(Sound &sound, int semitones) {
   PlaySound(sound);
 }
 
+// used in game scene rendering
+float getMidPosition(int lane) {
+  return ((0.01 + lane * 0.165) + (0.01 + (lane + 1) * 0.165)) / 2;
+}
+
 class GameManager {
 public:
   std::string titleText = "MUSIC";
@@ -18,6 +23,13 @@ public:
   std::string playButtonText = "PLAY?";
   std::string quitButtonText = "QUIT?";
   std::vector<ScreenArea *> bases;
+
+  std::string textS = "S";
+  std::string textD = "D";
+  std::string textF = "F";
+  std::string textJ = "J";
+  std::string textK = "K";
+  std::string textL = "L";
 
   bool keepLooping = true;
 
@@ -136,6 +148,81 @@ int main() {
 
   game.addChild(std::make_unique<ScreenArea>("bottom text area",
                                              Rectangle{0, 0.9, 1, 0.1}, GREEN));
+  ScreenArea &bottomArea = game.getChild("bottom text area");
+
+  // DIVIDERS
+  for (int i = 0; i < 7; i++) {
+    game.addChild(std::make_unique<ScreenArea>(
+        "divider " + std::to_string(i), Rectangle{0.165f * i, 0, 0.01, 0.9},
+        GREEN));
+  } /*
+   game.addChild(std::make_unique<ScreenArea>(
+       "divider 1", Rectangle{0, 0, 0.01, 0.9}, GREEN));
+   game.addChild(std::make_unique<ScreenArea>(
+       "divider 2", Rectangle{0.165, 0, 0.01, 0.9}, GREEN));
+   game.addChild(std::make_unique<ScreenArea>(
+       "divider 3", Rectangle{0.165 * 2, 0, 0.01, 0.9}, GREEN));
+   game.addChild(std::make_unique<ScreenArea>(
+       "divider 4", Rectangle{0.165 * 3, 0, 0.01, 0.9}, GREEN));
+   game.addChild(std::make_unique<ScreenArea>(
+       "divider 5", Rectangle{0.165 * 4, 0, 0.01, 0.9}, GREEN));
+   game.addChild(std::make_unique<ScreenArea>(
+       "divider 6", Rectangle{0.165 * 5, 0, 0.01, 0.9}, GREEN));
+   game.addChild(std::make_unique<ScreenArea>(
+       "divider 7", Rectangle{0.165 * 6, 0, 0.01, 0.9}, GREEN));*/
+
+  // LETTERS
+  float keyWidth = 0.04;
+  bottomArea.addChild(std::make_unique<DynamicStringScreenArea>(
+      "s key", Rectangle{getMidPosition(0) - keyWidth / 2, 0, keyWidth, 1},
+      &gm.textS, BLACK));
+  bottomArea.addChild(std::make_unique<DynamicStringScreenArea>(
+      "d key", Rectangle{getMidPosition(1) - keyWidth / 2, 0, keyWidth, 1},
+      &gm.textD, BLACK));
+  bottomArea.addChild(std::make_unique<DynamicStringScreenArea>(
+      "f key", Rectangle{getMidPosition(2) - keyWidth / 2, 0, keyWidth, 1},
+      &gm.textF, BLACK));
+  bottomArea.addChild(std::make_unique<DynamicStringScreenArea>(
+      "j key", Rectangle{getMidPosition(3) - keyWidth / 2, 0, keyWidth, 1},
+      &gm.textJ, BLACK));
+  bottomArea.addChild(std::make_unique<DynamicStringScreenArea>(
+      "k key", Rectangle{getMidPosition(4) - keyWidth / 2, 0, keyWidth, 1},
+      &gm.textK, BLACK));
+  bottomArea.addChild(std::make_unique<DynamicStringScreenArea>(
+      "l key", Rectangle{getMidPosition(5) - keyWidth / 2, 0, keyWidth, 1},
+      &gm.textL, BLACK));
+
+  // ON PRESS COLORS
+  std::string temp[] = {"S", "D", "F", "J", "K", "L"};
+  for (int i = 0; i < 6; i++) {
+    game.addChild(std::make_unique<ScreenArea>(
+        temp[i], Rectangle{0.02f + 0.165f * i, 0, 0.135, 1},
+        Color{0, 0, 0, 50}));
+  } /*
+   game.addChild(std::make_unique<ScreenArea>(
+                     "colorman s", Rectangle{0.02 + 0.165 * 0, 0, 0.135, 1},
+                     Color{0, 0, 0, 50}))
+       .setShouldDraw(false);
+   game.addChild(std::make_unique<ScreenArea>(
+                     "colorman d", Rectangle{0.02 + 0.165 * 1, 0, 0.135, 1},
+                     Color{0, 0, 0, 50}))
+       .setShouldDraw(false);
+   game.addChild(std::make_unique<ScreenArea>(
+                     "colorman f", Rectangle{0.02 + 0.165 * 2, 0, 0.135, 1},
+                     Color{0, 0, 0, 50}))
+       .setShouldDraw(false);
+   game.addChild(std::make_unique<ScreenArea>(
+                     "colorman j", Rectangle{0.02 + 0.165 * 3, 0, 0.135, 1},
+                     Color{0, 0, 0, 50}))
+       .setShouldDraw(false);
+   game.addChild(std::make_unique<ScreenArea>(
+                     "colorman k", Rectangle{0.02 + 0.165 * 4, 0, 0.135, 1},
+                     Color{0, 0, 0, 50}))
+       .setShouldDraw(false);
+   game.addChild(std::make_unique<ScreenArea>(
+                     "colorman l", Rectangle{0.02 + 0.165 * 5, 0, 0.135, 1},
+                     Color{0, 0, 0, 50}))
+       .setShouldDraw(false);*/
 
   // GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE | GAME SCREEN ENDS HERE
   // ##############################################################################
@@ -205,6 +292,12 @@ int main() {
         playNote(piano, 3);
       if (IsKeyPressed(KEY_L))
         playNote(piano, 6);
+    }
+
+    for (int key : {KEY_S, KEY_D, KEY_F, KEY_J, KEY_K, KEY_L}) {
+      gm.bases[1]
+          ->getChild(std::string(1, static_cast<char>(key)))
+          .setShouldDraw(IsKeyDown(key));
     }
   }
 }
